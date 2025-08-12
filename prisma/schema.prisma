@@ -15,9 +15,57 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
+  id            Int       @id @default(autoincrement())
+  fullName      String // allowNull: false
+  email         String    @unique // unique: true, validate: isEmail
+  password      String // allowNull: false
+  phoneNumber   String? // optional field
+  walletAddress String? // optional field
+  salary        Float? // optional, chỉ dùng cho employee
+  status        String    @default("active") // defaultValue: 'active', validate: isIn(['active', 'inactive'])
+  role          Role // ENUM('employee', 'accounting', 'hr'), allowNull: false
+  dateOfBirth   DateTime? @db.Date // DATEONLY
+  gender        Gender? // ENUM('male', 'female', 'other')
+  address       String? // optional field
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations - PayrollSchedules where this user is the employee
+  payrollSchedules PayrollSchedule[] @relation("EmployeePayrolls")
+
+  // Relations - PayrollSchedules approved by this user
+  approvedPayrolls PayrollSchedule[] @relation("ApproverPayrolls")
+}
+
+model PayrollSchedule {
+  id             Int      @id @default(autoincrement())
+  amount         Float // DataTypes.FLOAT
+  stablecoinType String   @map("stablecoin_type") // DataTypes.STRING
+  payday         DateTime @db.Date // DataTypes.DATEONLY
+  status         String // DataTypes.STRING
+
+  // Foreign Keys
+  idEmployee Int  @map("id_employee")
+  approvedBy Int? @map("approved_by") // optional, might not be approved yet
+
+  // Relations
+  employee User  @relation("EmployeePayrolls", fields: [idEmployee], references: [id])
+  approver User? @relation("ApproverPayrolls", fields: [approvedBy], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("payroll_schedules") // table name mapping
+}
+
+enum Role {
+  employee
+  accounting
+  hr
+}
+
+enum Gender {
+  male
+  female
+  other
 }
