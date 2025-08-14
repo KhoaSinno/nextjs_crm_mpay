@@ -13,6 +13,9 @@
     "@hookform/resolvers": "^5.2.1",
     "@prisma/client": "^6.13.0",
     "@tanstack/react-table": "^8.21.3",
+    "@trpc/tanstack-react-query": "^11.4.4",
+    "@wagmi/connectors": "^5.9.3",
+    "ethers": "^6.15.0",
     "lucide-react": "^0.539.0",
     "mysql2": "^3.14.3",
     "next": "15.4.6",
@@ -20,6 +23,7 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
     "react-toastify": "^11.0.5",
+    "wagmi": "^2.16.3",
     "yup": "^1.7.0"
   },
   "devDependencies": {

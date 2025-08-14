@@ -1,16 +1,5 @@
 "use client";
 
-// APTOS SDK
-// import {
-//   WalletItem,
-//   isInstallRequired,
-//   truncateAddress,
-//   useWallet,
-// } from "@aptos-labs/wallet-adapter-react";
-
-// import type { AdapterWallet, AdapterNotDetectedWallet } from "@aptos-labs/wallet-adapter-react";
-
-// LISK SDK
 import { Copy, LogOut, User, Wallet as WalletIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import {
@@ -75,12 +64,8 @@ export function WalletSelector({ className = "" }) {
   // Get balance
   const { data: balance } = useBalance({
     address: address,
+    chainId: liskSepolia.id,
   });
-
-  console.log("===> address", address);
-  console.log("===> Balance", balance);
-  console.log("===> isConnected", isConnected);
-  console.log("===> chain", chain);
 
   const closeDialog = useCallback(() => setIsDialogOpen(false), []);
 
