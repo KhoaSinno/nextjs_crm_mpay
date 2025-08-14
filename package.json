@@ -9,11 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aptos-labs/wallet-adapter-react": "^7.0.4",
+    "@hookform/resolvers": "^5.2.1",
     "@prisma/client": "^6.13.0",
+    "@tanstack/react-table": "^8.21.3",
+    "lucide-react": "^0.539.0",
     "mysql2": "^3.14.3",
     "next": "15.4.6",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-hook-form": "^7.62.0",
+    "react-toastify": "^11.0.5",
+    "yup": "^1.7.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

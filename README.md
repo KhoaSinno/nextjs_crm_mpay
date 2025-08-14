@@ -190,3 +190,11 @@ Tôi sẽ giúp bạn lập **plan 5 ngày để hoàn thành MVP** cho dự án
 
 Nếu bạn muốn, tôi có thể viết **phiên bản contract hỗ trợ stablecoin** ngay hôm nay để bạn dùng cho ngày 2, và kèm luôn **hook kết nối Next.js** để ngày 3 bạn chỉ cần ráp UI.
 Bạn muốn tôi viết ngay phần này không?
+
+## 🎯 Next Steps
+
+1. **Test API thoroughly**: Tất cả CRUD operations
+2. **Add real database**: Thay mock data bằng real DB
+3. **Add form validation**: Cho create/edit forms  
+4. **Error boundaries**: Cho better error handling
+5. **Loading states**: Cho better UX
