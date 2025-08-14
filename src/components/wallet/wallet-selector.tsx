@@ -1,16 +1,5 @@
 "use client";
 
-// APTOS SDK
-// import {
-//   WalletItem,
-//   isInstallRequired,
-//   truncateAddress,
-//   useWallet,
-// } from "@aptos-labs/wallet-adapter-react";
-
-// import type { AdapterWallet, AdapterNotDetectedWallet } from "@aptos-labs/wallet-adapter-react";
-
-// LISK SDK
 import { Copy, LogOut, User, Wallet as WalletIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import {
@@ -20,9 +9,9 @@ import {
   useBalance,
   useSwitchChain,
 } from "wagmi";
-import { liskSepolia } from "wagmi/chains";
+import { liskSepolia, sepolia } from "wagmi/chains";
 import type { Connector } from "wagmi";
-import type { Eip1193Provider } from "ethers";
+import { WalletError, WalletErrorCodes } from "@/types/wallet";
 
 // Simple toast hook replacement
 const useToast = () => {
@@ -53,36 +42,148 @@ const useToast = () => {
       }
     `;
     toastEl.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
-      <div style="opacity: 0.9;">${description}</div>
+      <div style="font-size: 14px; margin-bottom: 4px;">${title}</div>
+      <div style="font-size: 12px; opacity: 0.9;">${description}</div>
     `;
     document.body.appendChild(toastEl);
     setTimeout(() => {
       document.body.removeChild(toastEl);
     }, 3000);
   };
-
   return { toast };
 };
 
-export function WalletSelector({ className = "" }) {
-  const { address, isConnected, chain } = useAccount();
-  const { disconnect } = useDisconnect();
+export function WalletSelector() {
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Get balance
+  const { address, isConnected, chain } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { disconnect } = useDisconnect();
+  const { switchChain } = useSwitchChain();
+
   const { data: balance } = useBalance({
-    address: address,
+    address,
   });
 
-  console.log("===> address", address);
-  console.log("===> Balance", balance);
-  console.log("===> isConnected", isConnected);
-  console.log("===> chain", chain);
+  // Add Lisk Sepolia network to wallet if not exists
+  const addLiskSepoliaNetwork = useCallback(async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [
+            {
+              chainId: `0x${liskSepolia.id.toString(16)}`,
+              chainName: liskSepolia.name,
+              rpcUrls: [liskSepolia.rpcUrls.default.http[0]],
+              nativeCurrency: liskSepolia.nativeCurrency,
+              blockExplorerUrls: liskSepolia.blockExplorers
+                ? [liskSepolia.blockExplorers.default.url]
+                : [],
+            },
+          ],
+        });
+        return true;
+      } catch (error: unknown) {
+        console.error("Error adding Lisk Sepolia network:", error);
+        const walletError = error as WalletError;
+        if (walletError.code === WalletErrorCodes.USER_REJECTED_REQUEST) {
+          toast({
+            variant: "destructive",
+            title: "Network Addition Cancelled",
+            description: "You cancelled the network addition request.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Failed to Add Network",
+            description: "Could not add Lisk Sepolia network to your wallet.",
+          });
+        }
+        return false;
+      }
+    }
+    return false;
+  }, [toast]);
 
-  const closeDialog = useCallback(() => setIsDialogOpen(false), []);
+  // Switch to Lisk Sepolia network
+  const switchToLiskSepolia = useCallback(async () => {
+    if (!switchChain) return;
+
+    try {
+      await switchChain({ chainId: liskSepolia.id });
+      toast({
+        title: "Network Switched",
+        description: "Successfully switched to Lisk Sepolia network.",
+      });
+    } catch (error: unknown) {
+      console.error("Error switching to Lisk Sepolia:", error);
+      const walletError = error as WalletError;
+      if (walletError.code === WalletErrorCodes.UNRECOGNIZED_CHAIN_ID) {
+        // Network not added to wallet, try to add it
+        const networkAdded = await addLiskSepoliaNetwork();
+        if (networkAdded) {
+          // Try switching again after adding network
+          try {
+            await switchChain({ chainId: liskSepolia.id });
+            toast({
+              title: "Network Switched",
+              description: "Successfully switched to Lisk Sepolia network.",
+            });
+          } catch (switchError: unknown) {
+            console.error("Error switching after adding network:", switchError);
+            toast({
+              variant: "destructive",
+              title: "Switch Failed",
+              description: "Failed to switch to Lisk Sepolia network.",
+            });
+          }
+        }
+      } else if (walletError.code === WalletErrorCodes.USER_REJECTED_REQUEST) {
+        toast({
+          variant: "destructive",
+          title: "Network Switch Cancelled",
+          description: "You cancelled the network switch request.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Switch Failed",
+          description: "Failed to switch to Lisk Sepolia network.",
+        });
+      }
+    }
+  }, [switchChain, toast, addLiskSepoliaNetwork]);
+
+  // Switch to Ethereum Sepolia network
+  const switchToEthereumSepolia = useCallback(async () => {
+    if (!switchChain) return;
+
+    try {
+      await switchChain({ chainId: sepolia.id });
+      toast({
+        title: "Network Switched",
+        description: "Successfully switched to Ethereum Sepolia network.",
+      });
+    } catch (error: unknown) {
+      console.error("Error switching to Ethereum Sepolia:", error);
+      const walletError = error as WalletError;
+      if (walletError.code === WalletErrorCodes.USER_REJECTED_REQUEST) {
+        toast({
+          variant: "destructive",
+          title: "Network Switch Cancelled",
+          description: "You cancelled the network switch request.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Switch Failed",
+          description: "Failed to switch to Ethereum Sepolia network.",
+        });
+      }
+    }
+  }, [switchChain, toast]);
 
   const copyAddress = useCallback(async () => {
     if (!address) return;
@@ -96,220 +197,194 @@ export function WalletSelector({ className = "" }) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to copy wallet address.",
+        description: "Failed to copy address to clipboard.",
       });
     }
   }, [address, toast]);
 
-  const truncateAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  const handleConnect = (connector: Connector) => {
+    connect({ connector });
+    setIsOpen(false);
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    setIsOpen(false);
   };
 
   if (isConnected && address) {
     return (
       <div className="relative">
         <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className={`flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
         >
-          <User className="w-5 h-5" />
-          <div className="flex flex-col items-start">
-            <span className="text-sm">{truncateAddress(address)}</span>
-            {balance && (
-              <span className="text-xs opacity-80">
-                {Number(balance.formatted).toFixed(4)} {balance.symbol}
-              </span>
-            )}
-          </div>
+          <WalletIcon className="w-4 h-4" />
+          <span className="hidden sm:block">
+            {address.slice(0, 6)}...{address.slice(-4)}
+          </span>
         </button>
 
-        {dropdownOpen && (
-          <>
-            <div
-              className="fixed inset-0 bg-transparent z-[998]"
-              onClick={() => setDropdownOpen(false)}
-            />
-            <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[999] min-w-[200px] py-2">
+        {isOpen && (
+          <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+            <div className="p-4">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Wallet</h3>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+
               {/* Network Info */}
               <div className="px-4 py-2 border-b border-gray-100">
                 <div className="text-xs text-gray-500">Network</div>
                 <div className="text-sm font-medium">
                   {chain?.name || "Unknown"}
                 </div>
-                {balance && (
-                  <div className="text-xs text-gray-600">
-                    Balance: {Number(balance.formatted).toFixed(4)}{" "}
-                    {balance.symbol}
+
+                {/* Network Switch Buttons */}
+                {isConnected && (
+                  <div className="mt-2 space-y-2">
+                    <button
+                      onClick={switchToEthereumSepolia}
+                      className={`w-full px-3 py-2 text-xs rounded-md border transition-colors ${
+                        chain?.id === sepolia.id
+                          ? "bg-blue-50 border-blue-200 text-blue-700"
+                          : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Switch to Ethereum Sepolia
+                    </button>
+                    <button
+                      onClick={switchToLiskSepolia}
+                      className={`w-full px-3 py-2 text-xs rounded-md border transition-colors ${
+                        chain?.id === liskSepolia.id
+                          ? "bg-blue-50 border-blue-200 text-blue-700"
+                          : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Switch to Lisk Sepolia
+                    </button>
                   </div>
                 )}
               </div>
 
-              <button
-                onClick={() => {
-                  copyAddress();
-                  setDropdownOpen(false);
-                }}
-                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left bg-transparent border-none cursor-pointer hover:bg-gray-50"
-              >
-                <Copy className="w-4 h-4" />
-                Copy address
-              </button>
+              {/* Balance */}
+              {balance && (
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="text-xs text-gray-500">Balance</div>
+                  <div className="text-sm font-medium">
+                    {balance.formatted} {balance.symbol}
+                  </div>
+                </div>
+              )}
 
-              <button
-                onClick={() => {
-                  disconnect();
-                  setDropdownOpen(false);
-                }}
-                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left bg-transparent border-none cursor-pointer hover:bg-gray-50"
-              >
-                <LogOut className="w-4 h-4" />
-                Disconnect
-              </button>
+              {/* Account Info */}
+              <div className="px-4 py-2 border-b border-gray-100">
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <div>
+                    <div className="text-xs text-gray-500">Address</div>
+                    <div className="text-sm font-mono">
+                      {address.slice(0, 8)}...{address.slice(-8)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="px-4 py-2 space-y-2">
+                <button
+                  onClick={copyAddress}
+                  className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <Copy className="w-4 h-4" />
+                  <span>Copy Address</span>
+                </button>
+                <button
+                  onClick={handleDisconnect}
+                  className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Disconnect</span>
+                </button>
+              </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     );
   }
 
   return (
-    <>
+    <div className="relative">
       <button
-        onClick={() => setIsDialogOpen(true)}
-        className={`flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
       >
-        <WalletIcon className="w-4 h-4" /> Connect Wallet
+        <WalletIcon className="w-4 h-4" />
+        <span>Connect Wallet</span>
       </button>
 
-      {isDialogOpen && <ConnectWalletDialog close={closeDialog} />}
-    </>
-  );
-}
+      {isOpen && (
+        <div className="absolute top-full right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Connect Wallet
+              </h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
 
-function ConnectWalletDialog({ close }: { close: () => void }) {
-  const { connect, connectors, isPending } = useConnect();
-  const { switchChain } = useSwitchChain();
-
-  const handleConnect = async (connector: Connector) => {
-    try {
-      await connect({ connector });
-
-      // Try to switch to Lisk Sepolia after connection
-      setTimeout(async () => {
-        try {
-          await switchChain({ chainId: liskSepolia.id });
-        } catch (error) {
-          // If network doesn't exist, add it
-          if (window.ethereum) {
-            try {
-              await window.ethereum.request({
-                method: "wallet_addEthereumChain",
-                params: [
-                  {
-                    chainId: `0x${liskSepolia.id.toString(16)}`,
-                    chainName: liskSepolia.name,
-                    nativeCurrency: liskSepolia.nativeCurrency,
-                    rpcUrls: ["https://rpc.sepolia-api.lisk.com"],
-                    blockExplorerUrls: ["https://sepolia-blockscout.lisk.com"],
-                  },
-                ],
-              });
-            } catch (addError) {
-              console.error("Error adding Lisk Sepolia network:", addError);
-            }
-          }
-        }
-      }, 1000);
-
-      close();
-    } catch (error) {
-      console.error("Connection failed:", error);
-    }
-  };
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 z-[9998] flex items-center justify-center"
-        onClick={close}
-      />
-
-      {/* Modal */}
-      <div
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl p-6 max-w-lg w-[90%] max-h-[80vh] overflow-y-auto z-[9999] shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <h2 className="m-0 text-2xl font-semibold leading-tight text-indigo-500">
-            Connect to Lisk Sepolia
-          </h2>
-        </div>
-
-        {connectors.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {connectors.map((connector) => (
-              <WalletRow
-                key={connector.uid}
-                connector={connector}
-                onConnect={() => handleConnect(connector)}
-                isPending={isPending}
-              />
-            ))}
+            <div className="space-y-2">
+              {connectors.map((connector) => (
+                <button
+                  key={connector.uid}
+                  onClick={() => handleConnect(connector)}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors"
+                >
+                  <WalletIcon className="w-5 h-5" />
+                  <div>
+                    <div className="font-medium">{connector.name}</div>
+                    <div className="text-xs text-gray-500">
+                      Connect using {connector.name}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="p-5 text-center text-gray-500">
-            <p>No wallets available</p>
-            <p style={{ fontSize: "14px", marginTop: "8px" }}>
-              Install MetaMask or another Web3 wallet to connect
-            </p>
-          </div>
-        )}
-
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-          <p className="text-sm text-blue-800">
-            ℹ️ After connecting, we&apos;ll automatically add Lisk Sepolia
-            network to your wallet.
-          </p>
         </div>
-      </div>
-    </>
-  );
-}
-
-function WalletRow({
-  connector,
-  onConnect,
-  isPending,
-}: {
-  connector: Connector;
-  onConnect: () => void;
-  isPending: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between w-full p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold">
-          {connector.name.charAt(0)}
-        </div>
-        <span className="font-medium">{connector.name}</span>
-      </div>
-
-      <button
-        onClick={onConnect}
-        disabled={isPending}
-        className="px-4 py-2 text-sm bg-indigo-500 text-white border-none rounded-md cursor-pointer hover:bg-indigo-600 disabled:opacity-50"
-      >
-        {isPending ? "Connecting..." : "Connect"}
-      </button>
+      )}
     </div>
   );
-}
-
-// Add type declaration for window.ethereum
-// Fix here
-declare global {
-  interface Window {
-    ethereum?: Window["ethereum"] & Eip1193Provider;
-  }
 }

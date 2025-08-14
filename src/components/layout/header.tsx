@@ -57,7 +57,7 @@ const Header = ({ greeting = "Good Morning", onMenuClick = () => {} }) => {
           </button>
 
           {/* Wallet Connection */}
-          <WalletSelector className="flex-shrink-0" />
+          <WalletSelector />
 
           {/* User Profile */}
           <div className="flex items-center gap-2 p-2 transition-colors border rounded-lg sm:gap-3 border-zinc-400/20 hover:bg-gray-50">
