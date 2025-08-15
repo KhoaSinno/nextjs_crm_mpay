@@ -42,4 +42,5 @@ export const WalletErrorCodes = {
   PARSE_ERROR: -32700,
 } as const;
 
-export type WalletErrorCode = typeof WalletErrorCodes[keyof typeof WalletErrorCodes];
+export type WalletErrorCode =
+  (typeof WalletErrorCodes)[keyof typeof WalletErrorCodes];
