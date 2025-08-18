@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { User, Calendar, Edit, X, Save } from "lucide-react";
-import InputField from "../Form/InputField";
-import SelectField from "../Form/SelectField";
+import { InputField } from "@/components/ui/input-field";
+import {SelectField} from "@/components/ui/select-field";
 import { updateProfile } from "../../api/user";
 import { toast } from "react-toastify";
 import { useAuth } from "../../contexts/AuthContext";

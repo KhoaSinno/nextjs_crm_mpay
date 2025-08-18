@@ -1,34 +1,33 @@
-import { useState } from 'react';
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
-import { ProfileEmp } from './employee-profile';
-import { useAuth } from '../../contexts/AuthContext';
+import { useState } from "react";
+import Sidebar from "../layout/sidebar";
+import Header from "../layout/header";
+import { ProfileEmp } from "@/components/employee/employee-profile";
+// import { useAuth } from '../../contexts/AuthContext';
 
 const DetailEmployee = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    // const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // const navigate = useNavigate();
 
-    const { user } = useAuth();
-    
-    console.log(user)
-    
-    // const handleBackToEmployees = () => {
-    //     navigate('/employees');
-    // };
-    return (
-        <div className="min-h-screen bg-gray-50 lg:flex">
-            {/* Sidebar */}
-            <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+  const user = { fullName: "Demo User", salary: 0 };
+  // console.log(user)
 
-            {/* Main Content */}
-            <div className="flex-1 lg:ml-0">
-                <div className="flex flex-col">
-                    {/* Header */}
-                    <Header onMenuClick={() => setSidebarOpen(true)} />
+  // const handleBackToEmployees = () => {
+  //     navigate('/employees');
+  // };
+  return (
+    <div className="min-h-screen bg-gray-50 lg:flex">
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-                    {/* Content Area */}
-                    <div className="flex-1 p-4 sm:p-6">
-                        {/* <div className="mb-6 sm:mb-8">
+      {/* Main Content */}
+      <div className="flex-1 lg:ml-0">
+        <div className="flex flex-col">
+          {/* Header */}
+          <Header onMenuClick={() => setSidebarOpen(true)} />
+
+          {/* Content Area */}
+          <div className="flex-1 p-4 sm:p-6">
+            {/* <div className="mb-6 sm:mb-8">
                             <div className="flex items-center gap-4 mb-4">
                                 <button
                                     onClick={handleBackToEmployees}
@@ -48,15 +47,15 @@ const DetailEmployee = () => {
                             </div>
                         </div> */}
 
-                        {/* Employee Table */}
-                        <div className="overflow-hidden bg-white border rounded-lg border-zinc-400/20">
-                            <ProfileEmp employeeData={user} />
-                        </div>
-                    </div>
-                </div>
+            {/* Employee Table */}
+            <div className="overflow-hidden bg-white border rounded-lg border-zinc-400/20">
+              <ProfileEmp employeeData={user} />
             </div>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default DetailEmployee;
