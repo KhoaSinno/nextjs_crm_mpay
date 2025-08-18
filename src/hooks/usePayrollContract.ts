@@ -6,14 +6,68 @@ import { PAYROLL_CONTRACT } from "../../constants/app-contract";
 export const useDeposit = () => {
   const { data: txHash, error, isPending, writeContract } = useWriteContract();
 
-  return { txHash, error, isPending, writeContract };
+  const deposit = (amount: string | number) => {
+    const parsedAmount = parseEther(amount.toString());
+    writeContract({
+      ...PAYROLL_CONTRACT,
+      address: PAYROLL_CONTRACT.address as `0x${string}`,
+      functionName: "deposit",
+      args: [parsedAmount],
+    });
+  };
+
+  const {
+    data,
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  return {
+    txHash,
+    error,
+    isPending,
+    writeContract,
+    deposit,
+    data,
+    isConfirming,
+    isConfirmed,
+  };
 };
 
 /** 2) Withdraw ETH from contract */
 export const useWithdraw = () => {
   const { data: txHash, error, isPending, writeContract } = useWriteContract();
 
-  return { txHash, error, isPending, writeContract };
+  const withdraw = (amount: string | number) => {
+    const parsedAmount = parseEther(amount.toString());
+    writeContract({
+      ...PAYROLL_CONTRACT,
+      address: PAYROLL_CONTRACT.address as `0x${string}`,
+      functionName: "withdraw",
+      args: [parsedAmount],
+    });
+  };
+
+  const {
+    data,
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  return {
+    txHash,
+    error,
+    isPending,
+    writeContract,
+    withdraw,
+    data,
+    isConfirming,
+    isConfirmed,
+  };
 };
 
 /** 3) Register a new employee */
@@ -60,13 +114,62 @@ export const useRegisterEmployee = () => {
 /** 4) Pay for employee */
 export const usePayEmployee = () => {
   const { data: txHash, error, isPending, writeContract } = useWriteContract();
-
-  return { txHash, error, isPending, writeContract };
+  const payEmployee = (address: `0x${string}`) => {
+    writeContract({
+      ...PAYROLL_CONTRACT,
+      address: PAYROLL_CONTRACT.address as `0x${string}`,
+      functionName: "payEmployee",
+      args: [address],
+    });
+  };
+  const {
+    data,
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+  return {
+    txHash,
+    error,
+    isPending,
+    writeContract,
+    payEmployee,
+    data,
+    isConfirming,
+    isConfirmed,
+  };
 };
 
 /** 4) Run payroll */
 export const useRunPayroll = () => {
   const { data: txHash, error, isPending, writeContract } = useWriteContract();
 
-  return { txHash, error, isPending, writeContract };
+  const runPayroll = () => {
+    writeContract({
+      ...PAYROLL_CONTRACT,
+      address: PAYROLL_CONTRACT.address as `0x${string}`,
+      functionName: "runPayroll",
+      args: [],
+    });
+  };
+
+  const {
+    data,
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  return {
+    txHash,
+    error,
+    isPending,
+    writeContract,
+    runPayroll,
+    data,
+    isConfirming,
+    isConfirmed,
+  };
 };

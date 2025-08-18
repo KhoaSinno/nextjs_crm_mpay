@@ -138,8 +138,6 @@ const TabsAddNewEmp = ({ onBack }: { onBack: () => void }) => {
 
         console.log("Transaction hash:", hash);
 
-        // TODO: Gọi API để lưu dữ liệu
-        // Có thể navigate về danh sách nhân viên
         handleCancel();
       }
     }
