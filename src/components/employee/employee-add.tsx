@@ -15,6 +15,9 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { employeeApi } from "@/lib/api";
+import { Employee } from "@/types/employee";
+import { useRegisterEmployee } from "@/hooks/usePayrollContract";
 
 // Validation schemas cho từng tab
 const personalInfoSchema = Yup.object().shape({
@@ -35,7 +38,6 @@ const personalInfoSchema = Yup.object().shape({
     "Tình trạng hôn nhân không được để trống"
   ),
   gender: Yup.string().required("Giới tính không được để trống"),
-  nationality: Yup.string().required("Quốc tịch không được để trống"),
   address: Yup.string().required("Địa chỉ không được để trống"),
 });
 
@@ -52,6 +54,10 @@ const TabsAddNewEmp = ({ onBack }: { onBack: () => void }) => {
   const [activeTab, setActiveTab] = useState(0);
   const router = useRouter();
 
+  // UseHook contract
+
+  const { registerEmployee } = useRegisterEmployee();
+
   // Form validation cho Personal Info
   const personalForm = useForm({
     resolver: yupResolver(personalInfoSchema),
@@ -65,7 +71,6 @@ const TabsAddNewEmp = ({ onBack }: { onBack: () => void }) => {
       dateOfBirth: "",
       maritalStatus: "",
       gender: "",
-      nationality: "",
       address: "",
     },
   });
@@ -100,20 +105,6 @@ const TabsAddNewEmp = ({ onBack }: { onBack: () => void }) => {
       completed: false,
       active: false,
     },
-    // {
-    //     id: 2,
-    //     name: 'Documents',
-    //     icon: FileText,
-    //     completed: false,
-    //     active: false
-    // },
-    // {
-    //     id: 3,
-    //     name: 'Account Access',
-    //     icon: Key,
-    //     completed: false,
-    //     active: false
-    // }
   ];
 
   const handleNext = async () => {
@@ -133,6 +124,19 @@ const TabsAddNewEmp = ({ onBack }: { onBack: () => void }) => {
 
         const allData = { ...personalData, ...professionalData };
         console.log("Form data to submit:", allData);
+        const res = await employeeApi.createUser(
+          allData as unknown as Omit<Employee, "id">
+        );
+
+        console.log("API response:", res);
+
+        // Gọi hook để đăng ký nhân viên
+        const hash = await registerEmployee(
+          professionalData.walletAddress,
+          professionalData.salary
+        );
+
+        console.log("Transaction hash:", hash);
 
         // TODO: Gọi API để lưu dữ liệu
         // Có thể navigate về danh sách nhân viên
@@ -308,13 +312,6 @@ const TabsAddNewEmp = ({ onBack }: { onBack: () => void }) => {
                 options={genderOptions}
                 {...personalForm.register("gender")}
                 error={personalForm.formState.errors.gender?.message}
-              />
-              <SelectField
-                label="Nationality"
-                placeholder="Nationality"
-                options={nationalityOptions}
-                {...personalForm.register("nationality")}
-                error={personalForm.formState.errors.nationality?.message}
               />
             </div>
 

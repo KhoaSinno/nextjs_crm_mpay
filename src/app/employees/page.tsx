@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 
-import EmployeeTable from "@/app/components/employee/EmployeeTable";
+// import EmployeeTable from "@/app/components/employee/EmployeeTable";
+import EmployeeTable from "@/components/employee/employee-table";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 

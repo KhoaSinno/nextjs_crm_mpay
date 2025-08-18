@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 // import Sidebar from '@/components/sidebar';
 // import Header from '@/components/header';
-import TabsAddNewEmp from "@/app/components/employee/TabsAddNewEmp";
+import TabsAddNewEmp from "@/components/employee/employee-add";
 
 export default function AddEmployeePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

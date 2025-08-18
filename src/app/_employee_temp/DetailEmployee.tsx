@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
-import { ProfileEmp } from '../../components/employee/ProfileEmp';
+import { ProfileEmp } from '../../components/employee/employee-profile';
 import { useAuth } from '../../contexts/AuthContext';
 
 const DetailEmployee = () => {
