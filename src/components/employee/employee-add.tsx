@@ -124,19 +124,25 @@ const TabsAddNewEmp = ({ onBack }: { onBack: () => void }) => {
 
         const allData = { ...personalData, ...professionalData };
         console.log("Form data to submit:", allData);
-        const res = await employeeApi.createUser(
+        // const res = await employeeApi.createUser(
+        //   allData as unknown as Omit<Employee, "id">
+        // );
+
+        // --- Call from BE ---
+
+        const res = await employeeApi.createUserBE(
           allData as unknown as Omit<Employee, "id">
         );
 
         console.log("API response:", res);
 
         // Gọi hook để đăng ký nhân viên
-        const hash = await registerEmployee(
-          professionalData.walletAddress,
-          professionalData.salary
-        );
+        // const hash = await registerEmployee(
+        //   professionalData.walletAddress,
+        //   professionalData.salary
+        // );
 
-        console.log("Transaction hash:", hash);
+        // console.log("Transaction hash:", hash);
 
         handleCancel();
       }

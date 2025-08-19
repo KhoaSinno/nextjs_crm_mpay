@@ -34,6 +34,22 @@ export const employeeApi = {
     return response.json();
   },
 
+  async createUserBE(
+    user: Omit<Employee, "id">
+  ): Promise<ApiResponse<Employee>> {
+    const response = await fetch("/api/payroll-treasury/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to create user");
+    }
+    return response.json();
+  },
+
   async updateUser(
     id: number,
     user: Partial<Employee>
